@@ -80,7 +80,6 @@ jobs:
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}  # Original repository name
-      IMAGE_NAME_LOWER: $(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')  # Lowercase repository name
     outputs:
       image_tag: ${{ steps.set_output.outputs.image_tag }}
     steps:
@@ -102,6 +101,13 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.TOKEN }}
+      
+      - name: Precompute lowercase repository name
+        id: lowercase_repo
+        run: |
+          IMAGE_NAME_LOWER=$(echo "${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME_LOWER=$IMAGE_NAME_LOWER" >> $GITHUB_ENV
+          echo "Lowercase repository name: $IMAGE_NAME_LOWER"
       
       - name: Extract metadata for Docker
         id: meta
@@ -139,8 +145,7 @@ jobs:
       
       - name: Set image tag output
         id: set_output
-        run: echo "image_tag=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
-          
+        run: echo "image_tag=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT        
 
 
   update-k8s:
